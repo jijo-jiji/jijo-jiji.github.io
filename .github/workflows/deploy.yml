@@ -1,18 +1,53 @@
-jobs:
-  # ... your build job ...
+# Name of your workflow
+name: Deploy to GitHub Pages
 
-  # Deploy job
+# Run when a push is made to the main branch
+on:
+  push:
+    branches: [ "main" ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      # This step builds your site. If you are not using Jekyll,
+      # you may need to add your own build steps here.
+      # For plain HTML, you might not need a build step at all.
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  # Deployment job
   deploy:
-    # Add this concurrency block to your deploy job
-    concurrency:
-      group: "pages"
-      cancel-in-progress: true
-    
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    
+    # This is the key part that prevents stuck deployments
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+      
+    # These permissions are required for deployment
+    permissions:
+      pages: write
+      id-token: write
+      
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
