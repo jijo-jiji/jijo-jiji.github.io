@@ -311,6 +311,7 @@
     <a href="https://wa.me/60123795478?text=Semak%20kelayakan" target="_blank" class="fixed bottom-5 right-5 z-50 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-transform transform hover:scale-110">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/WhatsApp_icon.png/598px-WhatsApp_icon.png" alt="Chat on WhatsApp" class="w-16 h-16 rounded-full shadow-lg">
     </a>
+     <!-- CORRECTED SCRIPT SECTION -->
     <script>
         const form = document.getElementById('lead-form');
         const modal = document.getElementById('thank-you-modal');
@@ -322,28 +323,34 @@
             submitButton.disabled = true;
             submitButton.textContent = 'Menghantar...';
 
-            // --- IMPORTANT: This is your new FREE webhook URL from Google Apps Script ---
-            const webhookURL = 'https://script.google.com/macros/s/AKfycby65B7aDsLdLGozijcriEZyiXmt9VzF-837kV56MrScN5koZGumB_seoZhEu8fwBJJe/exec'
+            // --- IMPORTANT: This is your webhook URL for the WEBSITE script ---
+            const webhookURL = 'https://script.google.com/macros/s/AKfycby65B7aDsLdLGozijcriEZyiXmt9VzF-837kV56MrScN5koZGumB_seoZhEu8fwBJJe/exec'; // Replace this
+            
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
+            // This fetch request is now structured correctly to avoid CORB errors.
             fetch(webhookURL, {
                 method: 'POST',
-                mode: 'no-cors', // Important for Google Scripts to avoid CORS errors
-                cache: 'no-cache',
+                body: JSON.stringify(data), // We send the data as a raw string
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'text/plain;charset=utf-8', // Send as plain text
                 },
-                body: JSON.stringify(data)
             })
-            .then(() => {
-                console.log('Lead sent to Google Sheet successfully!');
-                modal.classList.remove('hidden'); // Show the modal on success
-                form.reset(); // Clear the form fields
+            .then(response => response.json()) // We now expect a JSON response from the script
+            .then(result => {
+                console.log('Success:', result);
+                if (result.result === 'success') {
+                    modal.classList.remove('hidden'); // Show the modal on success
+                    form.reset(); // Clear the form fields
+                } else {
+                    // Show an alert if the script returns an error message
+                    alert(`Maaf, terdapat masalah: ${result.message}`);
+                }
             })
             .catch((error) => {
                 console.error('Error:', error);
-                alert('Maaf, terdapat masalah semasa menghantar borang. Sila cuba lagi.');
+                alert('Maaf, terdapat masalah semasa menghantar borang. Sila semak sambungan internet anda.');
             })
             .finally(() => {
                 submitButton.disabled = false;
